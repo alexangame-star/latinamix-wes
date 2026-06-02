@@ -1,0 +1,536 @@
+import { useState, useEffect, useRef } from "react";
+
+/* ==================== DATA ==================== */
+const lessons = [
+  { num: 1, title: "Сальса — легкість і флірт", style: "Salsa", desc: "Базовий крок сальси, ритміка 1-2-3, прості комбінації ніг. Робота рук, координація, грайливість.", result: "Перший танець «з настроєм» — навіть на кухні", icon: "💃" },
+  { num: 2, title: "Румба — мова тіла і почуттів", style: "Rumba", desc: "Глибина, емоція, повільна чуттєвість. Руки, лінії тіла, хвилі. Як виглядати м'яко й елегантно.", result: "Ти додаси жіночність у кожен свій рух", icon: "🌹" },
+  { num: 3, title: "Ча-ча-ча — грайлива впевненість", style: "Cha-Cha", desc: "Чіткість, ритм і кокетство. Базові кроки і міні-комбінація.", result: "Рухи стануть точними і впевненими", icon: "✨" },
+  { num: 4, title: "Техніка рук — лінії, грація, виразність", style: "Arms", desc: "Комбінації та вправи на руки, робота з лініями тіла. Як зробити кожен рух виразним та граційним.", result: "Твої руки нарешті «заговорять» у танці", icon: "🦢" },
+  { num: 5, title: "Самба — енергія і драйв", style: "Samba", desc: "Bounce, пружність, життєрадісність. Об'єднання рухів у танцювальну комбінацію.", result: "Ти відчуєш драйв і не зможеш зупинитися", icon: "⚡" },
+  { num: 6, title: "Джайв — свобода і азарт", style: "Jive", desc: "Швидкість, гра, легкість. Сольний джайв — внутрішній драйв на максимум.", result: "Ти навчишся ловити кайф від ритму", icon: "🔥" },
+  { num: 7, title: "Твоя танцювальна імпровізація", style: "Фінал", desc: "З'єднання всіх стилів у вільну імпровізацію. Ти танцюєш без правил, без оцінок — тільки ти і музика.", result: "Ти танцюєш вільно — і це неймовірне відчуття", icon: "🎬" },
+];
+
+const pains = [
+  { text: "Мрієш танцювати, але не маєш партнера", sub: "і думаєш, що без пари нікуди. Насправді латину можна танцювати соло — і це неймовірно красиво" },
+  { text: "Перший досвід був невдалим", sub: "не той тренер, не та атмосфера — і бажання зникло. Тут буде інакше" },
+  { text: "Не знайшла свого тренера", sub: "ходила на пробні, але не відчула зв'язку. З Ілоною ти відчуєш різницю з першого уроку" },
+  { text: "Хочеш танцювати, але чоловік ревнує до партнера", sub: "тут партнер не потрібен. Це тільки ти, музика і дзеркало" },
+  { text: "Ще з дитинства тобі навіяли, що ти «не вмієш»", sub: "мама, вчителька, хтось — і ти повірила. Час розвіяти цей міф" },
+  { text: "Танці — це дорого: абонементи, форма, дорога", sub: "тут 490 грн. Ти вдома, босоніж, у чому зручно. Без зайвих витрат" },
+  { text: "Хочеш відчувати себе жіночною", sub: "але не знаєш з чого почати. Латина — найкоротший шлях до жіночності через рух" },
+];
+
+const resultsData = [
+  { icon: "🎯", text: "Знатимеш базу 5 латиноамериканських стилів" },
+  { icon: "🦢", text: "Рухи стануть граційними та жіночними" },
+  { icon: "🌍", text: "Зможеш танцювати будь-де і з будь-ким — не лише тут" },
+  { icon: "💫", text: "Навчишся не просто рухатися — а танцювати тілом і душею" },
+  { icon: "💪", text: "Перестанеш боятися танцювати навіть при інших" },
+  { icon: "🏠", text: "Навіть далеко від дому — танець поверне тебе до себе" },
+];
+
+const faqs = [
+  { q: "Я ніколи не танцювала — мені підійде?", a: "Так! Курс створений для початківців з нуля. Урок 1 — ти вже танцюєш сальсу. Ніхто не оцінює. Ти вдома, у безпечному просторі." },
+  { q: "Скільки часу потрібно на день?", a: "Один урок = 15–25 хвилин. Проходь по уроку на день або 2–3 на тиждень. Темп — твій." },
+  { q: "Потрібен партнер?", a: "Ні! Весь курс — сольний. Це одна з головних переваг: ніякого партнера, ніякої ревнощі, ніякого дискомфорту." },
+  { q: "Потрібне спеціальне взуття?", a: "Ні. Танцюй босоніж або в шкарпетках. Одяг — будь-який зручний." },
+  { q: "Мені 40/50/60 — не пізно?", a: "Без вікових обмежень. Латина — це не про вік, а про відчуття. Рухатися красиво можна в будь-якому віці." },
+  { q: "А якщо не вийде?", a: "Кожен урок можна переглядати скільки завгодно. Ілона пояснює покроково, з розбивкою. Все вийде — перевірено тисячами учениць." },
+];
+
+const regalia = [
+  { icon: "🏆", text: "Переможниця шоу «Танці з зірками»" },
+  { icon: "🌟", text: "Фіналістка «Танцюють всі», хореограф-постановник «Танцюють всі» — сезони 5, 6, 7, 8, 9 та «Повернення героїв»" },
+  { icon: "🙋‍♀️", text: "Наставниця жіночих тілесних практик — допомогла тисячам жінок повернути впевненість, натхнення і любов до свого тіла" },
+  { icon: "🌍", text: "Член журі міжнародних фестивалів. Запрошений хореограф «Танці з зірками» Грузія. Тренер «Зважені та Щасливі». Спікер ELLE Forum, Brand Woman Forum (Португалія), Superwoman, Charity Brunch" },
+  { icon: "💜", text: "Засновниця WES (Women Energy Space) — жіночий простір свідомого руху і енергії" },
+  { icon: "👑", text: "Засновниця UWU (Ukrainian Women Unity) — жіночий мотиваційний благодійний клуб" },
+];
+
+const PRICE = 490;
+const OLD_PRICE = 2499;
+const DISCOUNT = Math.round((1 - PRICE / OLD_PRICE) * 100);
+
+/* ==================== HOOKS ==================== */
+function useTimer(min) {
+  const [sec, setSec] = useState(min * 60);
+  const expired = sec <= 0;
+  useEffect(() => {
+    if (sec <= 0) return;
+    const id = setInterval(() => setSec(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(id);
+  }, []);
+  return { m: Math.floor(sec / 60), s: sec % 60, expired };
+}
+
+function useInView(th = 0.1) {
+  const ref = useRef(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setV(true); o.disconnect(); } }, { threshold: th });
+    o.observe(el); return () => o.disconnect();
+  }, [th]);
+  return [ref, v];
+}
+
+/* ==================== COMPONENTS ==================== */
+function Sec({ children, bg, style: s }) {
+  const [ref, v] = useInView(0.06);
+  return (<section ref={ref} style={{ padding: "64px 20px", background: bg || "transparent", opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(24px)", transition: "all 0.7s cubic-bezier(0.16, 1, 0.3, 1)", ...s }}><div style={{ maxWidth: 760, margin: "0 auto" }}>{children}</div></section>);
+}
+
+function ST({ children, sub, light, tag }) {
+  return (
+    <div style={{ textAlign: "center", marginBottom: 36 }}>
+      {tag && <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: light ? "#C9A8B8" : "#8B4B6B", marginBottom: 8 }}>{tag}</div>}
+      <h2 style={{ fontSize: 30, fontWeight: 800, color: light ? "#FFF8F5" : "#2D1B33", margin: 0, lineHeight: 1.2, fontFamily: "'Playfair Display', serif" }}>{children}</h2>
+      {sub && <p style={{ fontSize: 15, color: light ? "#C9A8B8" : "#8B6B7B", marginTop: 10, lineHeight: 1.5 }}>{sub}</p>}
+    </div>
+  );
+}
+
+function Btn({ children, big, dark, full }) {
+  const [h, setH] = useState(false);
+  return (
+    <button onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)} style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8,
+      padding: big ? "18px 52px" : "14px 36px", fontSize: big ? 18 : 15, fontWeight: 700,
+      color: dark ? "#2D1B33" : "#FFF8F5", width: full ? "100%" : "auto",
+      background: dark ? (h ? "#FFE4D6" : "#FFF0E8") : (h ? "linear-gradient(135deg, #A0456E, #7B3558)" : "linear-gradient(135deg, #8B4B6B, #6B3050)"),
+      border: "none", borderRadius: 50, cursor: "pointer",
+      transform: h ? "scale(1.03)" : "scale(1)",
+      boxShadow: h ? "0 8px 30px rgba(139,75,107,0.4)" : "0 4px 15px rgba(139,75,107,0.2)",
+      transition: "all 0.3s ease", letterSpacing: 0.3, fontFamily: "'DM Sans', sans-serif"
+    }}>{children}</button>
+  );
+}
+
+function TimerCompact({ m, s }) {
+  const pad = n => String(n).padStart(2, "0");
+  return (
+    <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 800, fontSize: 15, color: "#E879F9", letterSpacing: 1 }}>
+      {pad(m)}:{pad(s)}
+    </span>
+  );
+}
+
+function TimerBlock({ m, s, expired }) {
+  if (expired) return null;
+  const pad = n => String(n).padStart(2, "0");
+  return (
+    <div style={{
+      display: "inline-flex", alignItems: "center", gap: 12, padding: "10px 22px", borderRadius: 50,
+      background: "linear-gradient(135deg, #8B4B6B18, #E879F912)", border: "1px solid #8B4B6B33",
+      animation: "tp 2s ease-in-out infinite"
+    }}>
+      <style>{`@keyframes tp{0%,100%{box-shadow:0 0 0 0 rgba(232,121,249,0)}50%{box-shadow:0 0 16px 2px rgba(232,121,249,0.15)}}`}</style>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#8B4B6B" }}>🔥 Знижка -{DISCOUNT}% ще</span>
+      <div style={{ display: "flex", gap: 2 }}>
+        {pad(m).split("").map((d, i) => (
+          <div key={"m" + i} style={{ width: 26, height: 32, borderRadius: 6, background: "linear-gradient(180deg, #3D2540, #2D1B33)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#FFF8F5", fontFamily: "'JetBrains Mono', monospace", border: "1px solid #5C3D4D" }}>{d}</div>
+        ))}
+        <span style={{ fontSize: 18, fontWeight: 800, color: "#8B4B6B", margin: "0 1px", alignSelf: "center" }}>:</span>
+        {pad(s).split("").map((d, i) => (
+          <div key={"s" + i} style={{ width: 26, height: 32, borderRadius: 6, background: "linear-gradient(180deg, #3D2540, #2D1B33)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: "#FFF8F5", fontFamily: "'JetBrains Mono', monospace", border: "1px solid #5C3D4D" }}>{d}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Price({ big, dark }) {
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: big ? 12 : 8 }}>
+      <span style={{ fontSize: big ? 18 : 15, color: dark ? "#8B6B7B" : "#C9A8B8", textDecoration: "line-through", textDecorationColor: "#C44040", fontWeight: 500 }}>{OLD_PRICE} грн</span>
+      <span style={{ fontSize: big ? 52 : 34, fontWeight: 800, color: dark ? "#2D1B33" : "#FFF8F5", fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>{PRICE}</span>
+      <span style={{ fontSize: big ? 20 : 15, color: dark ? "#5C3D4D" : "#C9A8B8", fontFamily: "'Playfair Display', serif" }}>грн</span>
+    </div>
+  );
+}
+
+function LessonCard({ lesson }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div onClick={() => setOpen(!open)} style={{
+      background: open ? "linear-gradient(135deg, #FFF8F5, #FFF0E8)" : "#FFFBF9",
+      borderRadius: 14, padding: "18px 20px", cursor: "pointer",
+      border: open ? "1.5px solid #D4A0B0" : "1px solid #F0E0E6", transition: "all 0.3s ease"
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", background: "#8B4B6B11", fontSize: 20, flexShrink: 0 }}>{lesson.icon}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: "#8B4B6B", letterSpacing: 1 }}>УРОК {lesson.num}</span>
+            <span style={{ fontSize: 10, color: "#B88898" }}>{lesson.style}</span>
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#2D1B33", marginTop: 2, fontFamily: "'Playfair Display', serif" }}>{lesson.title}</div>
+        </div>
+        <span style={{ fontSize: 16, color: "#C9A8B8", transform: open ? "rotate(180deg)" : "", transition: "transform 0.2s", flexShrink: 0 }}>▾</span>
+      </div>
+      {open && (
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #F0E0E6" }}>
+          <p style={{ fontSize: 13, color: "#5C3D4D", lineHeight: 1.6, margin: "0 0 8px" }}>{lesson.desc}</p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "8px 12px", background: "#8B4B6B0A", borderRadius: 8 }}>
+            <span style={{ fontSize: 13 }}>→</span>
+            <span style={{ fontSize: 12, color: "#8B4B6B", fontWeight: 600, fontStyle: "italic" }}>{lesson.result}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FAQItem({ faq }) {
+  const [o, setO] = useState(false);
+  return (
+    <div onClick={() => setO(!o)} style={{ padding: "16px 20px", cursor: "pointer", borderBottom: "1px solid #3D254044", background: o ? "#ffffff08" : "transparent" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#FFF0E8", paddingRight: 16 }}>{faq.q}</span>
+        <span style={{ fontSize: 16, color: "#C9A8B8", transform: o ? "rotate(45deg)" : "", transition: "transform 0.2s", flexShrink: 0 }}>+</span>
+      </div>
+      {o && <p style={{ fontSize: 13, color: "#C9A8B8", lineHeight: 1.6, marginTop: 10 }}>{faq.a}</p>}
+    </div>
+  );
+}
+
+/* ==================== MAIN ==================== */
+export default function Landing() {
+  const [scrolled, setScrolled] = useState(false);
+  const t = useTimer(15);
+  useEffect(() => { const h = () => setScrolled(window.scrollY > 60); window.addEventListener("scroll", h); return () => window.removeEventListener("scroll", h); }, []);
+
+  return (
+    <div style={{ fontFamily: "'DM Sans', sans-serif", background: "#FFFBF9", color: "#2D1B33", overflowX: "hidden" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet" />
+
+      {/* ===== STICKY HEADER ===== */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        padding: scrolled ? "8px 16px" : "14px 20px",
+        background: scrolled ? "rgba(255,251,249,0.97)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
+        borderBottom: scrolled ? "1px solid #F0E0E6" : "none",
+        transition: "all 0.3s ease",
+        display: "flex", justifyContent: "space-between", alignItems: "center"
+      }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "#8B4B6B" }}>WES</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {scrolled && !t.expired && <TimerCompact m={t.m} s={t.s} />}
+          <Btn><span style={{ textDecoration: "line-through", opacity: 0.5, fontSize: 12, marginRight: 4 }}>{OLD_PRICE}</span> {PRICE} грн →</Btn>
+        </div>
+      </div>
+
+      {/* ===== STICKY BOTTOM CTA (mobile) ===== */}
+      {scrolled && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100,
+          padding: "10px 16px", background: "rgba(45,27,51,0.97)", backdropFilter: "blur(20px)",
+          borderTop: "1px solid #5C3D4D", display: "flex", alignItems: "center", justifyContent: "center", gap: 12
+        }}>
+          {!t.expired && <TimerCompact m={t.m} s={t.s} />}
+          <Btn full>Почати танцювати · {PRICE} грн</Btn>
+        </div>
+      )}
+
+      {/* ===== SCREEN 1: HERO ===== */}
+      <section style={{
+        minHeight: "100vh", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center",
+        textAlign: "center", padding: "90px 24px 80px",
+        background: "linear-gradient(180deg, #FFF8F5 0%, #FFF0E8 50%, #F5E6E0 100%)",
+        position: "relative", overflow: "hidden"
+      }}>
+        <div style={{ position: "absolute", top: "8%", left: "-10%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, #D4A0B012, transparent 70%)" }} />
+        <div style={{ position: "absolute", bottom: "10%", right: "-6%", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, #8B4B6B06, transparent 70%)" }} />
+
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 580 }}>
+          {/* Trust bar */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+            {["Танці з зірками", "Танцюють всі"].map(s => (
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#8B4B6B", fontWeight: 600, background: "#8B4B6B0C", padding: "4px 12px", borderRadius: 20, border: "1px solid #8B4B6B15" }}>
+                <span>🏆</span>{s}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2.5, color: "#B88898", marginBottom: 16, lineHeight: 1.7 }}>
+            МІНІ-КУРС ВІД ІЛОНИ ГВОЗДЬОВОЇ · 7 УРОКІВ · ОНЛАЙН
+          </div>
+
+          <h1 style={{ fontSize: 50, fontWeight: 800, color: "#2D1B33", margin: "0 0 6px", lineHeight: 1.05, fontFamily: "'Playfair Display', serif" }}>
+            Latina Mix
+          </h1>
+          <p style={{ fontSize: 21, color: "#5C3D4D", margin: "6px 0 0", fontFamily: "'Playfair Display', serif", fontStyle: "italic", fontWeight: 400 }}>
+            від нуля до свого танцю за 7 уроків
+          </p>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 5, margin: "24px 0", flexWrap: "wrap" }}>
+            {["Сальса", "Румба", "Ча-ча-ча", "Самба", "Джайв"].map(s => (
+              <span key={s} style={{ padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#8B4B6B10", color: "#8B4B6B", border: "1px solid #8B4B6B18" }}>{s}</span>
+            ))}
+          </div>
+
+          <p style={{ fontSize: 16, color: "#5C3D4D", lineHeight: 1.6, maxWidth: 500, margin: "0 auto 24px" }}>
+            За 7 уроків ти пройдеш п'ять латиноамериканських танців — від першого кроку до власної імпровізації. Без студії, без партнера, без «я&nbsp;не&nbsp;вмію»
+          </p>
+
+          {/* Video placeholder */}
+          <div style={{
+            width: "100%", maxWidth: 480, aspectRatio: "16/9", borderRadius: 16, margin: "0 auto 24px",
+            background: "linear-gradient(135deg, #2D1B33, #3D2540)", border: "2px solid #5C3D4D",
+            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative", overflow: "hidden"
+          }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(10px)", border: "2px solid rgba(255,255,255,0.25)" }}>
+              <span style={{ fontSize: 28, marginLeft: 4 }}>▶</span>
+            </div>
+            <div style={{ position: "absolute", bottom: 12, left: 16, fontSize: 12, color: "#C9A8B8" }}>📷 Промо-відео · 1 хв</div>
+          </div>
+
+          {!t.expired && <div style={{ marginBottom: 20 }}><TimerBlock m={t.m} s={t.s} expired={t.expired} /></div>}
+
+          <Price big dark />
+          <div style={{ marginTop: 4, marginBottom: 16, fontSize: 12, color: "#B88898" }}>
+            Знижка -{DISCOUNT}% · Одноразова оплата
+          </div>
+          <Btn big>Почати танцювати · {PRICE} грн</Btn>
+          <div style={{ marginTop: 12, fontSize: 12, color: "#B88898" }}>Доступ одразу після оплати</div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 24, marginTop: 32 }}>
+            {[["7", "уроків"], ["5", "стилів"], ["15–25", "хв/урок"]].map(([n, l]) => (
+              <div key={l}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#8B4B6B", fontFamily: "'Playfair Display', serif" }}>{n}</div>
+                <div style={{ fontSize: 11, color: "#B88898", marginTop: 2 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SOCIAL PROOF BAR ===== */}
+      <div style={{ padding: "16px 20px", background: "#2D1B33", textAlign: "center" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", maxWidth: 700, margin: "0 auto" }}>
+          {[["30+", "років у танцях"], ["1000+", "учениць онлайн"], ["9", "сезонів на ТВ"], ["⭐ 4.9", "рейтинг курсів"]].map(([n, l]) => (
+            <div key={l} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 16, fontWeight: 800, color: "#E879F9", fontFamily: "'JetBrains Mono', monospace" }}>{n}</span>
+              <span style={{ fontSize: 11, color: "#C9A8B8" }}>{l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ===== PAIN ===== */}
+      <Sec bg="#FFFBF9">
+        <ST sub="Якщо впізнала себе хоча б в одному — цей курс для тебе">Знайомо?</ST>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 580, margin: "0 auto" }}>
+          {pains.map((p, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "14px 16px", background: i % 2 === 0 ? "#FFF8F5" : "#FFFBF9", borderRadius: 12, border: "1px solid #F0E0E6" }}>
+              <span style={{ fontSize: 16, flexShrink: 0, marginTop: 2, color: "#D4A0B0" }}>◻</span>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#2D1B33", lineHeight: 1.4 }}>{p.text}</div>
+                <div style={{ fontSize: 13, color: "#8B6B7B", lineHeight: 1.5, marginTop: 3 }}>{p.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 28, padding: "16px 20px", textAlign: "center", background: "#8B4B6B08", borderRadius: 14, border: "1px solid #D4A0B022" }}>
+          <p style={{ fontSize: 14, color: "#5C3D4D", margin: 0, lineHeight: 1.8 }}>
+            Не потрібен досвід <strong style={{ color: "#8B4B6B" }}>•</strong> Без партнера <strong style={{ color: "#8B4B6B" }}>•</strong> Без попередньої підготовки <strong style={{ color: "#8B4B6B" }}>•</strong> Без вікових обмежень <strong style={{ color: "#8B4B6B" }}>•</strong> Без протипоказань<br />
+            <strong style={{ color: "#8B4B6B" }}>Потрібна тільки ти, Ілона, музика і 20 хвилин на день</strong>
+          </p>
+        </div>
+      </Sec>
+
+      {/* ===== AUTHOR ===== */}
+      <Sec bg="linear-gradient(180deg, #2D1B33, #1A0E20)" style={{ paddingTop: 72, paddingBottom: 72 }}>
+        <ST light>Хто тебе навчатиме</ST>
+        <div style={{ display: "flex", gap: 28, alignItems: "flex-start", flexWrap: "wrap", justifyContent: "center" }}>
+          <div style={{ width: 260, height: 340, borderRadius: 18, flexShrink: 0, background: "linear-gradient(135deg, #3D2540, #5C3D4D)", border: "2px solid #5C3D4D", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
+            <span style={{ fontSize: 44 }}>📷</span>
+            <span style={{ fontSize: 11, color: "#8B6B7B" }}>Фото Ілони</span>
+          </div>
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <h3 style={{ fontSize: 26, fontWeight: 800, color: "#FFF8F5", margin: "0 0 4px", fontFamily: "'Playfair Display', serif" }}>Ілона Гвоздьова</h3>
+            <div style={{ fontSize: 12, color: "#C9A8B8", marginBottom: 18 }}>Хореограф · Тренер · Засновниця WES</div>
+            <div style={{ fontSize: 14, color: "#E8D8E0", lineHeight: 1.7, marginBottom: 6 }}>Я в танцях з 3 років. Пройшла шлях до перемоги на головному танцювальному шоу країни.</div>
+            <div style={{ fontSize: 14, color: "#E8D8E0", lineHeight: 1.7, marginBottom: 6 }}>Танцювала на дев'ятому місяці вагітності — і це був один з найсильніших номерів у моєму житті.</div>
+            <div style={{ fontSize: 14, color: "#E8D8E0", lineHeight: 1.7, marginBottom: 6 }}>Пережила евакуацію, зруйнований дім — і все одно повернулася до руху, бо танець для мене це не хобі. Це спосіб жити.</div>
+            <div style={{ fontSize: 14, color: "#FFF0E8", lineHeight: 1.7, fontWeight: 500, marginTop: 14, paddingTop: 14, borderTop: "1px solid #3D254066" }}>
+              Я створила цей курс для тебе — для жінки, яка десь загубила зв'язок зі своїм тілом. Тобі не потрібно бути гнучкою, худою чи молодою. Тобі потрібно просто натиснути play і дозволити собі рухатися.
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: 32, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          {regalia.map((r, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "12px 14px", background: "#ffffff06", borderRadius: 10, border: "1px solid #5C3D4D33" }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>{r.icon}</span>
+              <span style={{ fontSize: 12, color: "#D4C0CC", lineHeight: 1.5 }}>{r.text}</span>
+            </div>
+          ))}
+        </div>
+      </Sec>
+
+      {/* ===== MID CTA ===== */}
+      <div style={{ padding: "28px 20px", background: "linear-gradient(135deg, #8B4B6B, #6B3050)", textAlign: "center" }}>
+        <div style={{ maxWidth: 500, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 10, marginBottom: 12 }}>
+            <span style={{ fontSize: 15, color: "#D4A0B0", textDecoration: "line-through" }}>{OLD_PRICE} грн</span>
+            <span style={{ fontSize: 34, fontWeight: 800, color: "#FFF8F5", fontFamily: "'Playfair Display', serif" }}>{PRICE} грн</span>
+          </div>
+          <Btn dark>Хочу танцювати · {PRICE} грн</Btn>
+          {!t.expired && <div style={{ marginTop: 10, fontSize: 12, color: "#D4A0B0" }}>⏰ Знижка діє ще <TimerCompact m={t.m} s={t.s} /></div>}
+        </div>
+      </div>
+
+      {/* ===== PROGRAM ===== */}
+      <Sec bg="linear-gradient(180deg, #FFF0E8, #FFFBF9)">
+        <ST sub="Від нуля до танцювальної імпровізації за 7 уроків">Програма курсу</ST>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {lessons.map(l => <LessonCard key={l.num} lesson={l} />)}
+        </div>
+      </Sec>
+
+      {/* ===== RESULTS ===== */}
+      <Sec bg="#FFFBF9">
+        <ST>Що зміниться після курсу</ST>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {resultsData.map((r, i) => (
+            <div key={i} style={{ padding: "16px 18px", borderRadius: 12, background: "#FFF8F5", border: "1px solid #F0E0E6", display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{ fontSize: 20, flexShrink: 0 }}>{r.icon}</span>
+              <span style={{ fontSize: 13, color: "#3D2540", lineHeight: 1.5 }}>{r.text}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 28, padding: "22px 24px", textAlign: "center", background: "linear-gradient(135deg, #8B4B6B, #6B3050)", borderRadius: 14, color: "#FFF8F5" }}>
+          <p style={{ fontSize: 16, fontStyle: "italic", margin: "0 0 6px", lineHeight: 1.5, fontFamily: "'Playfair Display', serif" }}>
+            «Ти навчишся не просто рухатися — а танцювати тілом і душею»
+          </p>
+          <span style={{ fontSize: 12, color: "#D4A0B0", fontWeight: 600 }}>— Ілона Гвоздьова</span>
+        </div>
+      </Sec>
+
+      {/* ===== CROSS-SELL WES ===== */}
+      <Sec bg="#FFF0E8" style={{ paddingTop: 40, paddingBottom: 40 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "20px 24px", background: "#FFFBF9", borderRadius: 16, border: "1px solid #F0E0E6", flexWrap: "wrap" }}>
+          <div style={{ fontSize: 36 }}>✨</div>
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#2D1B33" }}>Хочеш підготувати тіло до танцю?</div>
+            <div style={{ fontSize: 13, color: "#8B6B7B", marginTop: 4, lineHeight: 1.5 }}>Пройди курс «WES 7 днів» — тілесні практики та пластика тіла. Ідеальний старт перед Latina Mix.</div>
+          </div>
+          <Btn>Дізнатися більше</Btn>
+        </div>
+      </Sec>
+
+      {/* ===== FOR WHOM ===== */}
+      <Sec bg="#FFFBF9">
+        <ST>Цей курс для тебе, якщо:</ST>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, maxWidth: 620, margin: "0 auto" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {["Ніколи не танцювала — хочеш спробувати без стресу", "Танцювала давно — хочеш повернути відчуття руху", "Хочеш жіночності та впевненості через тіло", "Спосіб розрядитися після стресу і рутини", "За кордоном — танець повертає до себе", "Хочеш зняти красиве відео в русі"].map((t, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "#3D2540", lineHeight: 1.5 }}>
+                <span style={{ color: "#4ADE80", flexShrink: 0 }}>✓</span><span>{t}</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: "18px 20px", background: "#FFF0E8", borderRadius: 14, border: "1px solid #F0E0E6", alignSelf: "flex-start" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "#8B6B7B", marginBottom: 6 }}>НЕ ПІДІЙДЕ:</div>
+            {["Професійна підготовка до змагань", "Парні танці (курс — сольний)"].map((t, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 13, color: "#8B6B7B", lineHeight: 1.5, marginBottom: 4 }}>✗ {t}</div>
+            ))}
+          </div>
+        </div>
+      </Sec>
+
+      {/* ===== PRICE COMPARISON ===== */}
+      <Sec bg="#FFF8F5">
+        <ST>Порівняй ціну</ST>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, maxWidth: 480, margin: "0 auto" }}>
+          {[["Разове заняття з хореографом", "650–1 500 грн"], ["Абонемент у студію", "2 000–4 000 грн"], ["Онлайн-курс латини", "1 200–2 500 грн"]].map(([n, p]) => (
+            <div key={n} style={{ display: "flex", justifyContent: "space-between", padding: "12px 18px", background: "#FFF0E8", borderRadius: 10, border: "1px solid #F0E0E6" }}>
+              <span style={{ fontSize: 13, color: "#8B6B7B" }}>{n}</span>
+              <span style={{ fontSize: 13, color: "#8B6B7B", textDecoration: "line-through" }}>{p}</span>
+            </div>
+          ))}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 22px", background: "linear-gradient(135deg, #8B4B6B, #6B3050)", borderRadius: 12, marginTop: 4 }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#FFF8F5" }}>7 уроків · 5 стилів · Імпровізація</span>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+              <span style={{ fontSize: 13, color: "#D4A0B0", textDecoration: "line-through" }}>{OLD_PRICE}</span>
+              <span style={{ fontSize: 22, fontWeight: 800, color: "#FFF8F5", fontFamily: "'Playfair Display', serif" }}>{PRICE} ₴</span>
+            </div>
+          </div>
+        </div>
+      </Sec>
+
+      {/* ===== PRICING CTA ===== */}
+      <Sec bg="linear-gradient(180deg, #2D1B33, #1A0E20)" style={{ paddingTop: 72, paddingBottom: 72 }}>
+        <div style={{ textAlign: "center" }}>
+          <ST light sub="7 відеоуроків · 5 стилів · Імпровізація · Доступ 24/7">Почни танцювати сьогодні</ST>
+          {!t.expired && <div style={{ marginBottom: 24 }}><TimerBlock m={t.m} s={t.s} expired={t.expired} /></div>}
+          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "32px 44px", borderRadius: 22, background: "linear-gradient(135deg, #3D2540, #2D1B33)", border: "1px solid #5C3D4D" }}>
+            <div style={{ fontSize: 13, color: "#C9A8B8", marginBottom: 10 }}>Повний курс</div>
+            <Price big />
+            {!t.expired && <div style={{ fontSize: 11, fontWeight: 700, color: "#E879F9", marginTop: 6, marginBottom: 16, padding: "3px 12px", borderRadius: 20, background: "#E879F910" }}>🔥 -{DISCOUNT}% ще <TimerCompact m={t.m} s={t.s} /></div>}
+            {t.expired && <div style={{ height: 16 }} />}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 24, width: "100%" }}>
+              {["7 відеоуроків по 15–25 хв", "5 латиноамериканських стилів", "Танцювальна імпровізація", "Доступ з будь-якої точки світу", "Навчання у своєму темпі"].map(t => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ color: "#D4A0B0", fontSize: 13 }}>✓</span>
+                  <span style={{ fontSize: 13, color: "#C9A8B8" }}>{t}</span>
+                </div>
+              ))}
+            </div>
+            <Btn big dark>Хочу танцювати · {PRICE} грн</Btn>
+            <div style={{ marginTop: 10, fontSize: 11, color: "#8B6B7B" }}>Оплата карткою · Доступ одразу</div>
+          </div>
+
+          {/* Guarantee */}
+          <div style={{ marginTop: 24, padding: "14px 20px", background: "#ffffff08", borderRadius: 12, border: "1px solid #5C3D4D44", maxWidth: 420, margin: "24px auto 0", display: "flex", alignItems: "center", gap: 12, justifyContent: "center" }}>
+            <span style={{ fontSize: 22 }}>🛡️</span>
+            <span style={{ fontSize: 12, color: "#C9A8B8", lineHeight: 1.5 }}>Якщо після першого уроку зрозумієш, що це не твоє — повернемо гроші. Без питань.</span>
+          </div>
+        </div>
+      </Sec>
+
+      {/* ===== CASES ===== */}
+      <Sec bg="#FFFBF9">
+        <ST sub="Результати учасниць">Вони вже танцюють</ST>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ aspectRatio: "3/4", borderRadius: 14, background: "linear-gradient(135deg, #FFF0E8, #F5E6E0)", border: "2px dashed #D4A0B033", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 6 }}>
+              <span style={{ fontSize: 28 }}>📷</span>
+              <span style={{ fontSize: 11, color: "#B88898" }}>Відео-кейс {i}</span>
+            </div>
+          ))}
+        </div>
+      </Sec>
+
+      {/* ===== FAQ ===== */}
+      <Sec bg="linear-gradient(180deg, #1A0E20, #2D1B33)">
+        <ST light>Часті питання</ST>
+        <div style={{ borderRadius: 14, border: "1px solid #3D254055", overflow: "hidden" }}>
+          {faqs.map((f, i) => <FAQItem key={i} faq={f} />)}
+        </div>
+      </Sec>
+
+      {/* ===== FINAL CTA ===== */}
+      <section style={{ padding: "72px 24px 100px", textAlign: "center", background: "linear-gradient(180deg, #FFF8F5, #FFF0E8, #F5E6E0)" }}>
+        <div style={{ maxWidth: 540, margin: "0 auto" }}>
+          <h2 style={{ fontSize: 32, fontWeight: 800, color: "#2D1B33", marginBottom: 14, lineHeight: 1.2, fontFamily: "'Playfair Display', serif" }}>
+            Ти заслуговуєш на<br /><span style={{ fontStyle: "italic", color: "#8B4B6B" }}>20 хвилин для себе</span>
+          </h2>
+          <p style={{ fontSize: 15, color: "#5C3D4D", lineHeight: 1.6, marginBottom: 24 }}>
+            Не відкладай. Не чекай понеділка, відпустки чи «коли схудну». Твоє тіло готове прямо зараз — воно просто чекає, поки ти дозволиш собі рухатися.
+          </p>
+          {!t.expired && <div style={{ marginBottom: 16 }}><TimerBlock m={t.m} s={t.s} expired={t.expired} /></div>}
+          <Price dark />
+          <div style={{ height: 14 }} />
+          <Btn big>Почати · {PRICE} грн</Btn>
+          <div style={{ marginTop: 20, fontSize: 11, color: "#B88898", letterSpacing: 3, fontWeight: 600 }}>WOMEN ENERGY SPACE</div>
+        </div>
+      </section>
+
+      {/* Bottom padding for sticky CTA */}
+      {scrolled && <div style={{ height: 64 }} />}
+    </div>
+  );
+}
